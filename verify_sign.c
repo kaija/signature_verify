@@ -53,7 +53,7 @@ static BIO* digest_load_bio_file(char *path)
     BIO *pkey = NULL;
     pkey = BIO_new(BIO_s_file());
     rc = BIO_read_filename(pkey, path);
-    if (rc != 1){
+    if (rc != 1) {
         return NULL;
     }
     return pkey;
@@ -90,7 +90,7 @@ char* digest_base64_decode(char *buf, int len, int *olen)
     bmem = BIO_new_mem_buf(buf, len);
     bmem = BIO_push(b64, bmem);
     out = malloc(len);
-    if (out){
+    if (out) {
         memset(out, 0, len);
         *olen = BIO_read(bmem, out, len);
     }
@@ -104,7 +104,7 @@ char *read_file(char *file, int *len)
     void *ptr = NULL;
     int size = 0;
     fp = fopen(file, "r");
-    if (fp){
+    if (fp) {
         fseek (fp, 0, SEEK_END);
         size = ftell(fp);
         rewind(fp);
@@ -129,7 +129,7 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
     char *buf = NULL;
     if (base64 == 1) {
         pub = digest_load_bio_b64_buf(pubkey, len, &buf);
-    }else{
+    } else {
         pub = digest_load_bio_buf(pubkey, len);
     }
     if ( pub == NULL) res = VERIFY_PUBKEY;
@@ -143,16 +143,16 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
         char *out = NULL;
         if (base64 == 1) {
             out = digest_base64_decode(signature, slen, &len);
-        }else{
+        } else {
             out = malloc(slen);//TBD check null
             memcpy(out, signature, slen);
             len = slen;
         }
         fp = fopen(file, "r");
-        if (fp ){
+        if (fp ) {
             ctx = EVP_MD_CTX_create();
             if (digest_verify_init(ctx, EVP_sha256(), pkey) == 0 ) {
-                for(;;){
+                for (;;) {
                     int blen = fread(src_buf, 1, BUFSIZE, fp);
                     if (blen < 1) break;
                     if (digest_verify_update(ctx, src_buf, blen) != 0 ) {
