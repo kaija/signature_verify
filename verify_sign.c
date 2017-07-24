@@ -42,9 +42,9 @@ static int digest_verify_final(EVP_MD_CTX *ctx, char *sig_payload, unsigned int 
     ERR_clear_error();
     rc = EVP_DigestVerifyFinal(ctx, (unsigned char *)sig_payload, sig_len);
     if (rc != 1) {
-        return 1;
+        return VERIFY_FAIL;
     }
-    return 0;
+    return VERIFY_OK;
 }
 
 static BIO* digest_load_bio_file(char *path)
@@ -119,7 +119,7 @@ char *read_file(char *file, int *len)
 
 int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, char *file)
 {
-    int res = 0;
+    int res = VERIFY_FAIL;
     const int BUFSIZE = 512;
     char src_buf[BUFSIZE];
     FILE *fp = NULL;
@@ -159,8 +159,8 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
                         break;
                     }
                 }
-                if (digest_verify_final(ctx, out, len) == 0) {
-                    res = 1;
+                if (digest_verify_final(ctx, out, len) == VERIFY_OK) {
+                    res = VERIFY_OK;
                 }
             }
             EVP_MD_CTX_cleanup(ctx);

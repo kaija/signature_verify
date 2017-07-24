@@ -23,7 +23,7 @@ int test2()
     char *pkey = digest_base64_decode(public_key, strlen(public_key), &pkey_len);
     char *sign = digest_base64_decode(demosign, strlen(demosign), &sign_len);
     int rc = digest_verify(0, pkey, pkey_len, sign, sign_len, "demo.luac");
-    if (rc == 1) {
+    if (rc == VERIFY_OK) {
         printf("Verify OK\n");
     }else{
         printf("Verify NOT OK\n");
@@ -52,7 +52,7 @@ int demo()
             memcpy(signature, line, (ptr - line));
             memcpy(filename, ptr + 4 , strlen(line) - (ptr - line) - 5);
             printf("verifying: %s by %s\n", filename, signature);
-            if (digest_verify(1, public_key, strlen(public_key), signature, strlen(signature), filename)){
+            if (digest_verify(1, public_key, strlen(public_key), signature, strlen(signature), filename) == VERIFY_OK){
                 printf("%s verify OK\n", filename);
             }else{
                 printf("%s verify NOT OK\n", filename);
@@ -65,6 +65,8 @@ int demo()
 }
 int main()
 {
+    test();
     test2();
+    demo();
     return 0;
 }
