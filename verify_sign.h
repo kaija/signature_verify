@@ -1,5 +1,11 @@
 #ifndef __VERIFY_SIGN_H
 #define __VERIFY_SIGN_H
+enum{
+    VERIFY_OK,      /** verify pass */
+    VERIFY_FAIL,    /** verify failure */
+    VERIFY_PUBKEY   /** public key read error */
+};
+
 /**
  * @brief verify base64 encoded signature by using base64 encoded public key
  * @author kaija (kaija.chang@gmail.com)
@@ -14,4 +20,5 @@
  */
 
 int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, char *file);
+char* digest_base64_decode(char *buf, int len, int *olen);
 #endif

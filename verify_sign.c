@@ -81,7 +81,7 @@ static BIO* digest_load_bio_b64_buf(char *buf, int len, char **pbuf)
     return pkey;
 }
 
-static char* digest_base64_decode(char *buf, int len, int *olen)
+char* digest_base64_decode(char *buf, int len, int *olen)
 {
     char *out = NULL;
     BIO *b64, *bmem;
@@ -98,11 +98,11 @@ static char* digest_base64_decode(char *buf, int len, int *olen)
     return out;
 }
 
-void *read_file(char *file, size_t *len)
+char *read_file(char *file, int *len)
 {
     FILE *fp = NULL;
     void *ptr = NULL;
-    long size = 0;
+    int size = 0;
     fp = fopen(file, "r");
     if (fp){
         fseek (fp, 0, SEEK_END);
@@ -132,7 +132,9 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
     }else{
         pub = digest_load_bio_buf(pubkey, len);
     }
+    if ( pub == NULL) res = VERIFY_PUBKEY;
     pkey = PEM_read_bio_PUBKEY(pub, NULL, NULL, NULL);
+    if ( pkey == NULL) res = VERIFY_PUBKEY;
     //release buf
     if (buf) free(buf);
     if (pub) BIO_free(pub);
@@ -144,6 +146,7 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
         }else{
             out = malloc(slen);//TBD check null
             memcpy(out, signature, slen);
+            len = slen;
         }
         fp = fopen(file, "r");
         if (fp ){
