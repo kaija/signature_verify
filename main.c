@@ -38,6 +38,8 @@ int digest_simple(char *path, char *file)
     FILE *fp = NULL;
     char line[LINESIZE];
     int nok_count = 0;
+    int miss_count = 0;
+    int res = 0;
     if (path) {
         chdir(path);
     }
@@ -46,7 +48,7 @@ int digest_simple(char *path, char *file)
     }else{
         fp = fopen("signature.txt", "r");
     }
-    if(fp){
+    if (fp) {
         while (fgets(line, sizeof(line), fp)) {
             char filename[LINESIZE];
             char signature[LINESIZE];
@@ -59,11 +61,15 @@ int digest_simple(char *path, char *file)
             }
             memcpy(signature, line, (ptr - line));
             memcpy(filename, ptr + 2 , strlen(line) - (ptr - line) - 3);
-            DBG("verifying: %s by %s\n", filename, signature);
+            DBG("Verifying: %s\n", filename);
+            if ( 0 != access(filename, F_OK)) {
+                miss_count ++;
+                continue;
+            }
             if (digest_verify(1, public_key, strlen(public_key), signature, strlen(signature), filename) == VERIFY_OK){
-                DBG("%s verify OK\n", filename);
+                DBG("%s Verify OK\n", filename);
             }else{
-                DBG("%s verify NOT OK\n", filename);
+                DBG("%s Verify NOT OK\n", filename);
                 nok_count ++;
             }
 
@@ -71,13 +77,22 @@ int digest_simple(char *path, char *file)
         fclose(fp);
     }
     if (nok_count != 0) {
-        return -1;
+        DBG("%d file verify failure\n", nok_count);
+        res = -1;
     }
-    return 0;
+    if (miss_count != 0) {
+        DBG("%d file missing\n", miss_count);
+        res = -1;
+    }
+    return res;
 }
 
 int main()
 {
-    digest_simple(NULL, NULL);
+    if (digest_simple(NULL, NULL) != 0) {
+        printf("signature failure\n");
+    }else{
+        printf("signature verify OK\n");
+    }
     return 0;
 }
