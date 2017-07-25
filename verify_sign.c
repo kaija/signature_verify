@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <openssl/bio.h>
 #include <openssl/crypto.h>
 #include <openssl/pem.h>
@@ -101,7 +102,7 @@ char* digest_base64_decode(char *buf, int len, int *olen)
     return out;
 }
 
-char *read_file(char *file, int *len)
+char *digest_read_file(char *file, int *len)
 {
     FILE *fp = NULL;
     void *ptr = NULL;
@@ -120,7 +121,7 @@ char *read_file(char *file, int *len)
 }
 
 
-int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, char *file)
+int digest_verify(int base64, char *pubkey, int len, int signature_base64, char *signature, int slen, char *file)
 {
     int res = VERIFY_FAIL;
     const int BUFSIZE = 512;
@@ -144,7 +145,7 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
 
     if (pkey) {
         char *out = NULL;
-        if (base64 == 1) {
+        if (signature_base64 == 1) {
             out = digest_base64_decode(signature, slen, &len);
         } else {
             out = malloc(slen);//TBD check null
@@ -174,5 +175,60 @@ int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, 
         EVP_PKEY_free(pkey);
     }
     EVP_cleanup();
+    return res;
+}
+
+int digest_simple(char *path, char *file, char *public_key)
+{
+    const int LINESIZE = 512;//signature + file path
+    FILE *fp = NULL;
+    char line[LINESIZE];
+    int nok_count = 0;
+    int miss_count = 0;
+    int res = 0;
+    if (path) {
+        chdir(path);
+    }
+    if (file) {
+        fp = fopen(file, "r");
+    }else{
+        fp = fopen("signature.txt", "r");
+    }
+    if (fp) {
+        while (fgets(line, sizeof(line), fp)) {
+            char filename[LINESIZE];
+            char signature[LINESIZE];
+            memset(filename, 0, LINESIZE);
+            memset(signature, 0, LINESIZE);
+            char *ptr = strstr(line, "  ");
+            if (ptr == NULL) {
+                DBG("signature file parsing error\n");
+                break;
+            }
+            memcpy(signature, line, (ptr - line));
+            memcpy(filename, ptr + 2 , strlen(line) - (ptr - line) - 3);
+            DBG("Verifying: %s\n", filename);
+            if ( 0 != access(filename, F_OK)) {
+                miss_count ++;
+                continue;
+            }
+            if (digest_verify(1, public_key, strlen(public_key), 1, signature, strlen(signature), filename) == VERIFY_OK){
+                DBG("%s Verify OK\n", filename);
+            }else{
+                DBG("%s Verify NOT OK\n", filename);
+                nok_count ++;
+            }
+
+        }
+        fclose(fp);
+    }
+    if (nok_count != 0) {
+        DBG("%d file verify failure\n", nok_count);
+        res = -1;
+    }
+    if (miss_count != 0) {
+        DBG("%d file missing\n", miss_count);
+        res = -1;
+    }
     return res;
 }

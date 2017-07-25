@@ -8,7 +8,7 @@ static char demosign[] = "g8u7rEfr4aZgPyEpbF+dmtxp5xmpZPtxGbEbGiY1rIRjKVGIJAQLc+
 
 int test()
 {
-    int rc = digest_verify(1, public_key, strlen(public_key), demosign, strlen(demosign), "demo.luac");
+    int rc = digest_verify(1, public_key, strlen(public_key), 1, demosign, strlen(demosign), "demo.luac");
     if (rc == VERIFY_OK) {
         printf("Verify OK\n");
     }else{
@@ -23,7 +23,7 @@ int test2()
     int sign_len = 0;
     char *pkey = digest_base64_decode(public_key, strlen(public_key), &pkey_len);
     char *sign = digest_base64_decode(demosign, strlen(demosign), &sign_len);
-    int rc = digest_verify(0, pkey, pkey_len, sign, sign_len, "demo.luac");
+    int rc = digest_verify(0, pkey, pkey_len, 0, sign, sign_len, "demo.luac");
     if (rc == VERIFY_OK) {
         printf("Verify OK\n");
     }else{
@@ -31,7 +31,7 @@ int test2()
     }
     return 0;
 }
-
+/*
 int digest_simple(char *path, char *file)
 {
     const int LINESIZE = 512;//signature + file path
@@ -66,7 +66,7 @@ int digest_simple(char *path, char *file)
                 miss_count ++;
                 continue;
             }
-            if (digest_verify(1, public_key, strlen(public_key), signature, strlen(signature), filename) == VERIFY_OK){
+            if (digest_verify(1, public_key, strlen(public_key), 1, signature, strlen(signature), filename) == VERIFY_OK){
                 DBG("%s Verify OK\n", filename);
             }else{
                 DBG("%s Verify NOT OK\n", filename);
@@ -86,10 +86,10 @@ int digest_simple(char *path, char *file)
     }
     return res;
 }
-
+*/
 int main()
 {
-    if (digest_simple(NULL, NULL) != 0) {
+    if (digest_simple("./demo", NULL, public_key) != 0) {
         printf("signature failure\n");
     }else{
         printf("signature verify OK\n");
