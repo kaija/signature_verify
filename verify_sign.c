@@ -13,16 +13,17 @@
 
 #include "verify_sign.h"
 
-
 static int digest_verify_init(EVP_MD_CTX *ctx, const EVP_MD *type, EVP_PKEY *pkey) {
     int rc = 0;
     ERR_clear_error();
     rc = EVP_DigestInit_ex(ctx, EVP_sha256(), NULL);
     if (rc != 1) {
+        DBG("EVP digest init failure\n");
         return -EFAULT;
     }
     rc = EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pkey);
     if (rc != 1) {
+        DBG("EVP digest init failure\n");
         return -EFAULT;
     }
     return 0;
@@ -32,6 +33,7 @@ static int digest_verify_update(EVP_MD_CTX *ctx, char *msg_payload, unsigned int
     int rc = 0;
     rc = EVP_DigestVerifyUpdate(ctx, msg_payload, msg_len);
     if (rc != 1) {
+        DBG("EVP digest update payload failure\n");
         return -EFAULT;
     }
     return 0;
@@ -54,6 +56,7 @@ static BIO* digest_load_bio_file(char *path)
     pkey = BIO_new(BIO_s_file());
     rc = BIO_read_filename(pkey, path);
     if (rc != 1) {
+        DBG("Read public key failure\n");
         return NULL;
     }
     return pkey;

@@ -1,6 +1,6 @@
 all: verify
 
-CFLAGS=-I/usr/include -Wall
+CFLAGS=-I/usr/include -Wall -DDEBUGSIG
 LDFLAGS=-lcrypto
 
 verify: verify_sign.o main.o

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include "verify_sign.h"
 
@@ -31,42 +32,52 @@ int test2()
     return 0;
 }
 
-int demo()
+int digest_simple(char *path, char *file)
 {
-    const int LINESIZE = 512;
+    const int LINESIZE = 512;//signature + file path
     FILE *fp = NULL;
     char line[LINESIZE];
-
-    fp = fopen("signature.txt", "r");
+    int nok_count = 0;
+    if (path) {
+        chdir(path);
+    }
+    if (file) {
+        fp = fopen(file, "r");
+    }else{
+        fp = fopen("signature.txt", "r");
+    }
     if(fp){
         while (fgets(line, sizeof(line), fp)) {
             char filename[LINESIZE];
             char signature[LINESIZE];
             memset(filename, 0, LINESIZE);
             memset(signature, 0, LINESIZE);
-            char *ptr = strstr(line, "    ");
+            char *ptr = strstr(line, "  ");
             if (ptr == NULL) {
-                printf("signature file parsing error\n");
+                DBG("signature file parsing error\n");
                 break;
             }
             memcpy(signature, line, (ptr - line));
-            memcpy(filename, ptr + 4 , strlen(line) - (ptr - line) - 5);
-            printf("verifying: %s by %s\n", filename, signature);
+            memcpy(filename, ptr + 2 , strlen(line) - (ptr - line) - 3);
+            DBG("verifying: %s by %s\n", filename, signature);
             if (digest_verify(1, public_key, strlen(public_key), signature, strlen(signature), filename) == VERIFY_OK){
-                printf("%s verify OK\n", filename);
+                DBG("%s verify OK\n", filename);
             }else{
-                printf("%s verify NOT OK\n", filename);
+                DBG("%s verify NOT OK\n", filename);
+                nok_count ++;
             }
 
         }
         fclose(fp);
     }
+    if (nok_count != 0) {
+        return -1;
+    }
     return 0;
 }
+
 int main()
 {
-    test();
-    test2();
-    demo();
+    digest_simple(NULL, NULL);
     return 0;
 }

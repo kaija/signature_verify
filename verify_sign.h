@@ -4,10 +4,19 @@
  */
 #ifndef __VERIFY_SIGN_H
 #define __VERIFY_SIGN_H
+
+#ifdef DEBUGSIG
+# define DBG(fmt, args...)    fprintf(stderr, fmt, ## args)
+#else
+# define DBG(fmt, args...)    do {} while (0)
+#endif
+
 enum {
-	VERIFY_OK,      /** verify pass */
-	VERIFY_FAIL,    /** verify failure */
-	VERIFY_PUBKEY   /** public key read error */
+	VERIFY_OK,          /** verify pass */
+	VERIFY_FAIL,        /** verify failure */
+	VERIFY_PUBKEY,      /** public key read error */
+	VERIFY_SIG_FORMAT,  /** signature format parse error */
+    VERIFY_FILE_MISS    /** signature file missing */
 };
 /*
  * @fn int digest_verify(int base64, char *pubkey, int len, char *signature, int slen, char *file)
